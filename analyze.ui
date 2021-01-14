@@ -75,6 +75,15 @@
         <height>25</height>
        </rect>
       </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::UpDownArrows</enum>
+      </property>
+      <property name="currentSection">
+       <enum>QDateTimeEdit::DaySection</enum>
+      </property>
      </widget>
      <widget class="QComboBox" name="item_comboBox">
       <property name="geometry">
@@ -84,6 +93,12 @@
         <width>161</width>
         <height>24</height>
        </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="maxVisibleItems">
+       <number>15</number>
       </property>
      </widget>
      <widget class="QTableWidget" name="concTableWidget">
@@ -243,6 +258,9 @@
         <height>25</height>
        </rect>
       </property>
+      <property name="currentSection">
+       <enum>QDateTimeEdit::DaySection</enum>
+      </property>
      </widget>
      <widget class="QDateEdit" name="dateEdit_3">
       <property name="geometry">
@@ -252,6 +270,9 @@
         <width>131</width>
         <height>25</height>
        </rect>
+      </property>
+      <property name="currentSection">
+       <enum>QDateTimeEdit::DaySection</enum>
       </property>
      </widget>
      <widget class="QLabel" name="label_5">
@@ -372,7 +393,7 @@
      <x>0</x>
      <y>0</y>
      <width>1205</width>
-     <height>21</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

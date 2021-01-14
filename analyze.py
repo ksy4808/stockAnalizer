@@ -4,7 +4,6 @@ import datetime
 import sqlite3
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -20,12 +19,15 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtCore import pyqtSlot, Qt
 
 import datetime as dt
+from datetime import timedelta
 from PyQt5.QtCore import QStringListModel
 from multiprocessing import Pool
 from os import getpid
 import ItemSort
+import graphConclude
 import threading
 import time
+import os.path
 
 
 form_class = uic.loadUiType('analyze.ui')[0]
@@ -36,11 +38,11 @@ Interrestset = 0
 class MyWindow(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
+        self.w = None
         self.setupUi(self)
 
-        self.fig = plt.Figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.ConcHistoryGraph.addWidget(self.canvas)
+
+
 
         self.dateEdit.setDate(datetime.date.today())
         self.dateEdit.setMinimumDate(QDate(2021, 1, 1))
@@ -60,6 +62,7 @@ class MyWindow(QMainWindow, form_class):
         for index in range(len(tables)):
             item = self.getPureText(tables[index])
             self.item_comboBox.addItem(item)
+        self.setDropCompleter()
 
         #콤보박스에서 종목을 변경하면 테이블을 갱신한다.
         self.item_comboBox.currentIndexChanged.connect(self.dispConcludeTable)
@@ -82,26 +85,40 @@ class MyWindow(QMainWindow, form_class):
 
         self.lineEdit_second.setValidator(QtGui.QIntValidator(1,9999,self))#0초 부터 9999초까지 설정가능 범위로 한다.
 
-        self.plotConcHistoryGraph()
-    def plotConcHistoryGraph(self):
-        x = np.arange(0, 100, 1)
-        y = np.sin(x)
+        #makeGraphTap = graphConclude.graphConclude()
 
-        ax = self.fig.add_subplot(111)
-        ax.plot(x, y, label="label")
-        ax.set_xlabel("x_axis")
-        ax.set_xlabel("y_axis")
+        #self.cw = QWidget(self)
+        #self.w = graphConclude()
+        #self.w.show()
 
-        ax.set_title("my graph")
-        ax.legend()
-        self.canvas.draw()
+    def setDropCompleter(self):
+        tables = self.getAllItemList()
+        forDropList = []
+        for index in range(len(tables)):
+            item = self.getPureText(tables[index])
+            forDropList.append(item)
+            #self.item_comboBox.addItem(item)
+
+        forDropModel = QStringListModel()##관심종목으로 추가하기 위한 line editer의 completer model
+        forDropModel.setStringList(forDropList)
+        forDropCompleter = QCompleter()  ##관심종목으로 추가하기 위한 line editer의 completer
+        forDropCompleter.setModel(forDropModel)
+
+        self.item_comboBox.setCompleter(forDropCompleter)
+
+        lb = QLabel()#자동완성기능을 사용하기 위한 객체 생성 아마도 자동완성기능은 QLabel객체의 기능을 활용하나 봄
+        self.item_comboBox.currentTextChanged.connect(lb.setText)#자동완성기능을 호출
+
+        #self.item_comboBox.textActivated.connect(self.item_comboBox.clear)
+
+
 
     def ConcludeBy_custom(self):
         return
     def re_arrange(self):
         datestr = self.getDateForFileName()
         item = self.item_comboBox.currentText()
-        con = sqlite3.connect("../../conclusions/" + datestr + ".db")
+        con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("select * from %s;" % item)
         rows = cur.fetchall()
@@ -195,7 +212,7 @@ class MyWindow(QMainWindow, form_class):
     def dispConcludeTable(self):
         datestr = self.getDateForFileName()
         item = self.item_comboBox.currentText()
-        con = sqlite3.connect("../../conclusions/" + datestr + ".db")
+        con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("select * from %s;" %item)
         rows = cur.fetchall()
@@ -217,7 +234,7 @@ class MyWindow(QMainWindow, form_class):
     def ConcludeBy_ItematDate(self):
         datestr = self.getDateForFileName()
         item = self.item_comboBox.currentText()
-        con = sqlite3.connect("../../conclusions/" + datestr + ".db")
+        con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("select * from %s;" %item)
         rows = cur.fetchall()
@@ -249,7 +266,7 @@ class MyWindow(QMainWindow, form_class):
 
     def getAllItemList(self):
         datestr = self.getDateForFileName()
-        con = sqlite3.connect("../../conclusions/" + datestr + ".db")
+        con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
         rows = cur.fetchall()
@@ -259,13 +276,28 @@ class MyWindow(QMainWindow, form_class):
     def getDateForFileName(self):
         date = self.dateEdit.date()
         #datestr = "2021_01_08"
+        i = 0
+        while True:
+            #date = date+timedelta(days=-i)
+            date = date.addDays(-i)
+            datestr = date.toString("yyyy_MM_dd")
+            if True == self.isFileExist(date):
+                self.dateEdit.setDate(date)
+                return datestr
+            i += 1
+    def isFileExist(self, date):
         datestr = date.toString("yyyy_MM_dd")
-        return datestr
+        file = "../conclusions/" + datestr + ".db"
+        if os.path.exists(file):
+            return True
+        return False
+
+
     def runBtn(self):
         date = self.dateEdit.date()
         datestr = date.toString("yyyy_MM_dd")
 
-        con = sqlite3.connect("../../conclusions/" + datestr + ".db")
+        con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("select * from KosdaqItems;")
         con.close()

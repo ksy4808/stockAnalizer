@@ -187,9 +187,6 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
                     g_code = code
                     if True == self.reqAftercExistionChk(rowOffset, code):  # 이미 gettering한 종목인지 확인하고 아니면 API요청후 return
                         return
-                    else:  # 이미 gettering한 종목이면 다음 row를 확인하기 위해 계속 진행
-                        rowOffset += 1
-                        continue
                 rowOffset += 1
 
                 if rowOffset >= maxLoop and KospiKosdaq == 0:  # 최대 루프만큼 진행했으면 현재 kospi인지 확인해서 kospi이면 kosdaq종목으로 넘어간다.
@@ -227,7 +224,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
 
             today = self.getToday()
 
-            con = sqlite3.connect("../../conclusions/" + today + ".db")
+            con = sqlite3.connect("../conclusions/" + today + ".db")
             cur = con.cursor()
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS " + name + "(number integer PRIMARY KEY, conclusionTime text, price integer, quantity integer, conPrice integer)")
@@ -346,7 +343,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
                     return
     def reqAftercExistionChk(self, offset, code):
         global g_code
-        rowOffset = offset
+        global rowOffset
         g_code = code
 
         name = self.kiwoom.dynamicCall("GetMasterCodeName(QString)", str(g_code))  # 맨뒤는 종목코드, 코드에 따른 종목명을 가져옴
@@ -354,13 +351,14 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         name = str(name)
 
         today = self.getToday()
-        con = sqlite3.connect("../../conclusions/" + today + ".db")
+        con = sqlite3.connect("../conclusions/" + today + ".db")
         cur = con.cursor()
         cur.execute(" SELECT count(name) FROM sqlite_master WHERE type='table' AND name='%s' " % name)
         exsist  = cur.fetchone()[0]
         con.close()
 
         if exsist == 0:#1이면 table이 있음. 0이면 table이 없음 없으므로 API요청하고 return
+            rowOffset = offset
             print("현재 offset: {}/{}, 종목 명: {}".format(offset, maxLoop, name))
             self.pteLog.appendPlainText("현재 offset: {}/{}, 종목 명: {}".format(offset, maxLoop, name))  #
             self.pteLog.appendPlainText("종목코드: " + code)  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
