@@ -5,6 +5,7 @@ import sqlite3
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -24,7 +25,7 @@ from PyQt5.QtCore import QStringListModel
 from multiprocessing import Pool
 from os import getpid
 import ItemSort
-import graphConclude
+from graphConclude import graphConclude
 import threading
 import time
 import os.path
@@ -85,11 +86,30 @@ class MyWindow(QMainWindow, form_class):
 
         self.lineEdit_second.setValidator(QtGui.QIntValidator(1,9999,self))#0초 부터 9999초까지 설정가능 범위로 한다.
 
-        #makeGraphTap = graphConclude.graphConclude()
+        graphCall = graphConclude(self)#생성할 class에 자신을 넘겨줌으로써 생성된 class에서 mainwindow를 바로 사용할수 있게 한다.
+        """
+        self.fig = plt.Figure()
+        self.canvas = FigureCanvas(self.fig)
+        # self._QMainWindow.ConcHistoryGraph.addWidget(self.canvas)
+        self.ConcHistoryGraph.addWidget(self.canvas)
+        self.plotConcHistoryGraph()
 
-        #self.cw = QWidget(self)
-        #self.w = graphConclude()
-        #self.w.show()
+    def plotConcHistoryGraph(self):
+        x = np.arange(0, 100, 1)
+        y = np.sin(x)
+
+        ax = self.fig.add_subplot(111)
+        ax.plot(x, y, label="label")
+        ax.set_xlabel("x_axis")
+        ax.set_xlabel("y_axis")
+
+        ax.set_title("my graph")
+        ax.legend()
+        self.canvas.draw()
+        """
+
+
+        #makeGraphTap = graphConclude(self)
 
     def setDropCompleter(self):
         tables = self.getAllItemList()
