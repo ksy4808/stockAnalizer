@@ -61,7 +61,6 @@ class MyWindow(QMainWindow, form_class):
         self.Text.displayInit()
 
         #스위치 이벤트를 mathod에 연결한다.
-        self.run_btn.clicked.connect(self.runBtn)
         self.concludeByItematDate.clicked.connect(self.ConcludeBy_ItematDate)
         self.reArrange.clicked.connect(self.re_arrange)
         self.concluionDetail.clicked.connect(self.ConcludeBy_custom)
@@ -81,6 +80,7 @@ class MyWindow(QMainWindow, form_class):
     def re_arrange(self):
         util = self.util
         datestr = util.getDateForFileName(self)
+        discardFirstConc = True
 
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
@@ -115,8 +115,11 @@ class MyWindow(QMainWindow, form_class):
             if curTime < startTimeWindow:#최초 시작 시간보다 앞선 경우 처리하지 않고 넘긴다.(장중 데이터만 처리하는데 개장 전 데이터는 무시하기 위함.
                 continue
             elif curTime >= startTimeWindow and curTime < endTimeWindow:#현재 데이터가 time window내에 있는경우 accumulate한다.
-                valueAccumulate += int(row[4])
-                quantityAccumulate += int(row[3])
+                if discardFirstConc == True:#장 개시하고 최초 거래는 단일가 거래기 때문에 금액이 크고, 큰손 매도인지 매수인지 알 수 없으므로 무시한다.
+                    discardFirstConc = False
+                else:
+                    valueAccumulate += int(row[4])
+                    quantityAccumulate += int(row[3])
             else:#현재 데이터가 time window끝보다 크면 이전 accumulate했던 값을 startTimeWindow시점에 기록하고 새로 accumulate한다.
                 arrangeUnit = []#여기서 생성을 해야 2차원리스트로 삽입이 됨.
                 arrangeUnit.append(j)
@@ -135,8 +138,11 @@ class MyWindow(QMainWindow, form_class):
                 arrangeSet.append(arrangeUnit)
                 valueAccumulate = 0
                 quantityAccumulate = 0
-                valueAccumulate += int(row[4])
-                quantityAccumulate += int(row[3])
+                if discardFirstConc == True:#장 개시하고 최초 거래는 단일가 거래기 때문에 금액이 크고, 큰손 매도인지 매수인지 알 수 없으므로 무시한다.
+                    discardFirstConc = False
+                else:
+                    valueAccumulate += int(row[4])
+                    quantityAccumulate += int(row[3])
 
                 startTimeWindow = endTimeWindow
                 endTimeWindow = startTimeWindow + dt.timedelta(seconds=deltaSeconds)
@@ -162,6 +168,7 @@ class MyWindow(QMainWindow, form_class):
 
         Transe_Volume_sum = 0
         j = 0
+        firstconclude = 1
         for i, row in enumerate(arrangeSet, 0):
             insertTime = QTableWidgetItem(str(row[1]))
             insertPrice = QTableWidgetItem(str(format(row[2],",")))
@@ -175,8 +182,6 @@ class MyWindow(QMainWindow, form_class):
                 self.concTableWidget_2.setItem(j, 1, insertPrice)
                 self.concTableWidget_2.setItem(j, 2, insertmean)
                 j += 1
-            if i != 0:#제일 첫 거래는 단일가 거래기 때문에 큰손이 매도인지 매수인지 알 수 없으므로 sum하지 않는다.
-                        #마지막거래는 15시 30분 이후에 체결되므로 09:00~15:30까지 체결정보만 가지고 처리하는 여기에서는 마지막 단일가 거래는 자연스럽게 포함되지 않음.
                 Transe_Volume_sum += row[2]
 
         self.lineEdit_TransVolume_sum.setText(str(format(Transe_Volume_sum,",")))
@@ -185,7 +190,26 @@ class MyWindow(QMainWindow, form_class):
         util = self.util
         date = util.getDateForFileName(self)
         item = self.item_comboBox.currentText()
+        if item == "":#콤보박스가 비어있는경우임.
+            rows = self.model.getAllItemList(date)
+            if None != rows:
+                item = self.util.getPureText(rows[0])
+                rows = self.model.getConcInfoByItem(date, item)
+                self.item_comboBox.setEditText(item)
+                self.Text.dispComboBox()
+                return rows
+            else:
+                return None
+
         rows = self.model.getConcInfoByItem(date, item)
+        if rows == None:#콤보박스에 아이템은 있는데 실제 DB에 종목이 없는경우 있는 종목중 제일 앞의 종목을 표시한다.
+            rows = self.model.getAllItemList(date)
+            if rows == None:#DB도 없는경우 return None
+                return None
+            item = self.util.getPureText(rows[0])
+            rows = self.model.getConcInfoByItem(date, item)
+            self.item_comboBox.setEditText(item)
+
         return rows
 
     def ConcludeBy_ItematDate(self):
@@ -215,26 +239,6 @@ class MyWindow(QMainWindow, form_class):
             x_data.insert(0, time)
         plt.plot_date(x_data,y_data,linestyle="-",marker=".")
         plt.show()
-
-    def getAllItemList(self):
-        util = self.util
-        datestr = util.getDateForFileName(self)
-        con = sqlite3.connect("../conclusions/" + datestr + ".db")
-        cur = con.cursor()
-        cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        rows = cur.fetchall()
-        con.close()
-        #cur.execute("select * from KospiItems;")
-        return rows
-
-    def runBtn(self):
-        date = self.dateEdit.date()
-        datestr = date.toString("yyyy_MM_dd")
-
-        con = sqlite3.connect("../conclusions/" + datestr + ".db")
-        cur = con.cursor()
-        cur.execute("select * from KosdaqItems;")
-        con.close()
 
     def reqGetDateForFileName(self):
         util = self.util
