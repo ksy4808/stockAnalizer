@@ -9,7 +9,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class graphConclude():
     def __init__(self, _upper):
-        self._QMainWindow = QMainWindow
+        #self._QMainWindow = QMainWindow
         #self.setupUi(self)
 
         

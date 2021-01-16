@@ -25,10 +25,12 @@ from PyQt5.QtCore import QStringListModel
 from multiprocessing import Pool
 from os import getpid
 import ItemSort
-from graphConclude import graphConclude
 import threading
 import time
 import os.path
+
+from graphConclude import graphConclude
+from ksyUtil import ksyUtil
 
 
 form_class = uic.loadUiType('analyze.ui')[0]
@@ -136,7 +138,9 @@ class MyWindow(QMainWindow, form_class):
     def ConcludeBy_custom(self):
         return
     def re_arrange(self):
-        datestr = self.getDateForFileName()
+        util = ksyUtil(self)
+        datestr = util.getDateForFileName()
+
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
@@ -147,7 +151,7 @@ class MyWindow(QMainWindow, form_class):
         endTimeWindowStr = "153000"
 
         dateFormatter = "%Y_%m_%d %H%M%S"
-        x = self.getDateForFileName()+" "+startTimeWindowStr
+        x = datestr+" "+startTimeWindowStr
         startTimeWindow = dt.datetime.strptime(x, dateFormatter)
 
         if self.lineEdit_second.text() == "":
@@ -160,12 +164,12 @@ class MyWindow(QMainWindow, form_class):
         quantityAccumulate = 0
         j = 0
         for i in range(len(rows)):
-            x = self.getDateForFileName() + " " + endTimeWindowStr
+            x = datestr + " " + endTimeWindowStr
             if startTimeWindow >= dt.datetime.strptime(x, dateFormatter):
                 break
             rowsOffset = len(rows)-1-i
             row = rows[rowsOffset]
-            x = self.getDateForFileName() + " " + row[1]
+            x = datestr + " " + row[1]
             curTime = dt.datetime.strptime(x, dateFormatter)
             if curTime < startTimeWindow:#최초 시작 시간보다 앞선 경우 처리하지 않고 넘긴다.(장중 데이터만 처리하는데 개장 전 데이터는 무시하기 위함.
                 continue
@@ -230,7 +234,8 @@ class MyWindow(QMainWindow, form_class):
         self.lineEdit_TransVolume_sum.setText(str(format(Transe_Volume_sum,",")))
 
     def dispConcludeTable(self):
-        datestr = self.getDateForFileName()
+        util = ksyUtil(self)
+        datestr = util.getDateForFileName()
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
@@ -252,7 +257,8 @@ class MyWindow(QMainWindow, form_class):
             self.concTableWidget.setItem(i, 3, insertValue)
 
     def ConcludeBy_ItematDate(self):
-        datestr = self.getDateForFileName()
+        util = ksyUtil(self)
+        datestr = util.getDateForFileName()
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
@@ -285,7 +291,8 @@ class MyWindow(QMainWindow, form_class):
         return item
 
     def getAllItemList(self):
-        datestr = self.getDateForFileName()
+        util = ksyUtil(self)
+        datestr = util.getDateForFileName()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -293,6 +300,7 @@ class MyWindow(QMainWindow, form_class):
         con.close()
         #cur.execute("select * from KospiItems;")
         return rows
+    """
     def getDateForFileName(self):
         date = self.dateEdit.date()
         #datestr = "2021_01_08"
@@ -311,6 +319,7 @@ class MyWindow(QMainWindow, form_class):
         if os.path.exists(file):
             return True
         return False
+    """
 
 
     def runBtn(self):
