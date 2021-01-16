@@ -4,6 +4,7 @@ import datetime
 import sqlite3
 import numpy as np
 import matplotlib.pyplot as plt
+
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
@@ -30,13 +31,12 @@ import time
 import os.path
 
 from graphConclude import graphConclude
-from ksyUtil import ksyUtil
+import ksyUtil
+import ksyUi
+from model import getFromLocalDB as getLocalDB
 
 
 form_class = uic.loadUiType('analyze.ui')[0]
-
-Interrestset = 0
-
 
 class MyWindow(QMainWindow, form_class):
     def __init__(self):
@@ -44,33 +44,21 @@ class MyWindow(QMainWindow, form_class):
         self.w = None
         self.setupUi(self)
 
+        #ui관련 객체 초기화
+        self.Text = ksyUi.Text(self)
+        self.graph = ksyUi.graph(self)
+        self.eventSet = ksyUi.eventSet(self)
+        self.input = ksyUi.input(self)
 
+        #utility 관련 객체 초기화
+        self.util = ksyUtil.Util()
+        util = self.util
 
+        #model 관련 객체 초기화
+        self.model = getLocalDB()
 
-        self.dateEdit.setDate(datetime.date.today())
-        self.dateEdit.setMinimumDate(QDate(2021, 1, 1))
-        self.dateEdit.setMaximumDate(QDate(2100, 12, 31))
-
-        self.dateEdit_2.setDate(datetime.date.today())
-        self.dateEdit_2.setMinimumDate(QDate(2021, 1, 1))
-        self.dateEdit_2.setMaximumDate(QDate(2100, 12, 31))
-
-        self.dateEdit_3.setDate(datetime.date.today())
-        self.dateEdit_3.setMinimumDate(QDate(2021, 1, 1))
-        self.dateEdit_3.setMaximumDate(QDate(2100, 12, 31))
-
-
-        #콤보box에 모든 item을 나열한다.
-        tables = self.getAllItemList()
-        for index in range(len(tables)):
-            item = self.getPureText(tables[index])
-            self.item_comboBox.addItem(item)
-        self.setDropCompleter()
-
-        #콤보박스에서 종목을 변경하면 테이블을 갱신한다.
-        self.item_comboBox.currentIndexChanged.connect(self.dispConcludeTable)
-        #날짜 위제에서 날짜를 변경하면 테이블을 갱신한다.
-        self.dateEdit.dateTimeChanged.connect(self.dispConcludeTable)
+        #메인 windows display초기화
+        self.Text.displayInit()
 
         #스위치 이벤트를 mathod에 연결한다.
         self.run_btn.clicked.connect(self.runBtn)
@@ -78,10 +66,8 @@ class MyWindow(QMainWindow, form_class):
         self.reArrange.clicked.connect(self.re_arrange)
         self.concluionDetail.clicked.connect(self.ConcludeBy_custom)
 
-
-
         #체결정보 테이블 그리기 최초 프로그램실행시 설정되어있는 날짜와 종목의 체결정보를 표시한다.
-        self.dispConcludeTable()
+        #self.dispConcludeTable()
 
         #메뉴바에서 관심종목 항목 선택시 이벤트 연결
         self.call_Itemsort.triggered.connect(run_subProcItemSort)
@@ -89,57 +75,12 @@ class MyWindow(QMainWindow, form_class):
         self.lineEdit_second.setValidator(QtGui.QIntValidator(1,9999,self))#0초 부터 9999초까지 설정가능 범위로 한다.
 
         graphCall = graphConclude(self)#생성할 class에 자신을 넘겨줌으로써 생성된 class에서 mainwindow를 바로 사용할수 있게 한다.
-        """
-        self.fig = plt.Figure()
-        self.canvas = FigureCanvas(self.fig)
-        # self._QMainWindow.ConcHistoryGraph.addWidget(self.canvas)
-        self.ConcHistoryGraph.addWidget(self.canvas)
-        self.plotConcHistoryGraph()
-
-    def plotConcHistoryGraph(self):
-        x = np.arange(0, 100, 1)
-        y = np.sin(x)
-
-        ax = self.fig.add_subplot(111)
-        ax.plot(x, y, label="label")
-        ax.set_xlabel("x_axis")
-        ax.set_xlabel("y_axis")
-
-        ax.set_title("my graph")
-        ax.legend()
-        self.canvas.draw()
-        """
-
-
-        #makeGraphTap = graphConclude(self)
-
-    def setDropCompleter(self):
-        tables = self.getAllItemList()
-        forDropList = []
-        for index in range(len(tables)):
-            item = self.getPureText(tables[index])
-            forDropList.append(item)
-            #self.item_comboBox.addItem(item)
-
-        forDropModel = QStringListModel()##관심종목으로 추가하기 위한 line editer의 completer model
-        forDropModel.setStringList(forDropList)
-        forDropCompleter = QCompleter()  ##관심종목으로 추가하기 위한 line editer의 completer
-        forDropCompleter.setModel(forDropModel)
-
-        self.item_comboBox.setCompleter(forDropCompleter)
-
-        lb = QLabel()#자동완성기능을 사용하기 위한 객체 생성 아마도 자동완성기능은 QLabel객체의 기능을 활용하나 봄
-        self.item_comboBox.currentTextChanged.connect(lb.setText)#자동완성기능을 호출
-
-        #self.item_comboBox.textActivated.connect(self.item_comboBox.clear)
-
-
 
     def ConcludeBy_custom(self):
         return
     def re_arrange(self):
-        util = ksyUtil(self)
-        datestr = util.getDateForFileName()
+        util = self.util
+        datestr = util.getDateForFileName(self)
 
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
@@ -180,7 +121,7 @@ class MyWindow(QMainWindow, form_class):
                 arrangeUnit = []#여기서 생성을 해야 2차원리스트로 삽입이 됨.
                 arrangeUnit.append(j)
                 j += 1
-                arrangeUnit.append(startTimeWindow)
+                arrangeUnit.append(startTimeWindow.time())
                 if self.lineEdit_TransVolume.text() == "":  # 기준금액이 비어있으면 모두 sum
                     arrangeUnit.append(valueAccumulate)
                     arrangeUnit.append(quantityAccumulate)
@@ -218,47 +159,38 @@ class MyWindow(QMainWindow, form_class):
         self.concTableWidget_2.setColumnCount(3)
         self.concTableWidget_2.setRowCount(j)#기준금액을 넘는 경우만 리스트에 표시
         self.concTableWidget_2.setHorizontalHeaderLabels(["시간", "체결금액", "체결평균가"])
+
         Transe_Volume_sum = 0
         j = 0
         for i, row in enumerate(arrangeSet, 0):
             insertTime = QTableWidgetItem(str(row[1]))
             insertPrice = QTableWidgetItem(str(format(row[2],",")))
+            insertTime.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+            insertPrice.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             if row[3] != 0:#기준 금액 이상의 거래가 있는 경우만 표시하도록 함. 안그러면 평균가 계산할때 0 나누기때문에 에러남.
-                insertmean = QTableWidgetItem(str(format(row[2]/row[3], ",")))
+                mean = int(row[2]/row[3])
+                insertmean = QTableWidgetItem(str(format(mean, ",")))
+                insertmean.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.concTableWidget_2.setItem(j, 0, insertTime)
                 self.concTableWidget_2.setItem(j, 1, insertPrice)
                 self.concTableWidget_2.setItem(j, 2, insertmean)
                 j += 1
-            Transe_Volume_sum += row[2]
+            if i != 0:#제일 첫 거래는 단일가 거래기 때문에 큰손이 매도인지 매수인지 알 수 없으므로 sum하지 않는다.
+                        #마지막거래는 15시 30분 이후에 체결되므로 09:00~15:30까지 체결정보만 가지고 처리하는 여기에서는 마지막 단일가 거래는 자연스럽게 포함되지 않음.
+                Transe_Volume_sum += row[2]
 
         self.lineEdit_TransVolume_sum.setText(str(format(Transe_Volume_sum,",")))
 
-    def dispConcludeTable(self):
-        util = ksyUtil(self)
-        datestr = util.getDateForFileName()
+    def reqConcInfoByItem(self):
+        util = self.util
+        date = util.getDateForFileName(self)
         item = self.item_comboBox.currentText()
-        con = sqlite3.connect("../conclusions/" + datestr + ".db")
-        cur = con.cursor()
-        cur.execute("select * from %s;" %item)
-        rows = cur.fetchall()
-        con.close()
-        self.concTableWidget.setColumnCount(4)
-        self.concTableWidget.setRowCount(len(rows))
-        self.concTableWidget.setHorizontalHeaderLabels(["시간","체결가","체결량","체결금액"])
-
-        for i, row in enumerate(rows, 0):
-            insertTime = QTableWidgetItem(row[1])
-            insertPrice = QTableWidgetItem(str(format(row[2],",")))
-            insertQty = QTableWidgetItem(str(format(row[3],",")))
-            insertValue = QTableWidgetItem(str(format(row[4],",")))
-            self.concTableWidget.setItem(i, 0, insertTime)
-            self.concTableWidget.setItem(i, 1, insertPrice)
-            self.concTableWidget.setItem(i, 2, insertQty)
-            self.concTableWidget.setItem(i, 3, insertValue)
+        rows = self.model.getConcInfoByItem(date, item)
+        return rows
 
     def ConcludeBy_ItematDate(self):
-        util = ksyUtil(self)
-        datestr = util.getDateForFileName()
+        util = self.util
+        datestr = util.getDateForFileName(self)
         item = self.item_comboBox.currentText()
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
@@ -284,15 +216,9 @@ class MyWindow(QMainWindow, form_class):
         plt.plot_date(x_data,y_data,linestyle="-",marker=".")
         plt.show()
 
-    def getPureText(self, tuple):
-        item = str(tuple)
-        item = item.replace("('", "")
-        item = item.replace("',)", "")
-        return item
-
     def getAllItemList(self):
-        util = ksyUtil(self)
-        datestr = util.getDateForFileName()
+        util = self.util
+        datestr = util.getDateForFileName(self)
         con = sqlite3.connect("../conclusions/" + datestr + ".db")
         cur = con.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -300,27 +226,6 @@ class MyWindow(QMainWindow, form_class):
         con.close()
         #cur.execute("select * from KospiItems;")
         return rows
-    """
-    def getDateForFileName(self):
-        date = self.dateEdit.date()
-        #datestr = "2021_01_08"
-        i = 0
-        while True:
-            #date = date+timedelta(days=-i)
-            date = date.addDays(-i)
-            datestr = date.toString("yyyy_MM_dd")
-            if True == self.isFileExist(date):
-                self.dateEdit.setDate(date)
-                return datestr
-            i += 1
-    def isFileExist(self, date):
-        datestr = date.toString("yyyy_MM_dd")
-        file = "../conclusions/" + datestr + ".db"
-        if os.path.exists(file):
-            return True
-        return False
-    """
-
 
     def runBtn(self):
         date = self.dateEdit.date()
@@ -331,7 +236,9 @@ class MyWindow(QMainWindow, form_class):
         cur.execute("select * from KosdaqItems;")
         con.close()
 
-
+    def reqGetDateForFileName(self):
+        util = self.util
+        return util.getDateForFileName(self)
 
 def runItemSort():
     app = QApplication(sys.argv)

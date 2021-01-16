@@ -16,6 +16,7 @@ class graphConclude():
         self.fig = plt.Figure()
         self.canvas = FigureCanvas(self.fig)
 
+        #_upper.ConcHistoryGraph.addWidget(self.canvas)
         _upper.ConcHistoryGraph.addWidget(self.canvas)
         #self._form_class.ConcHistoryGraph.addWidget(self.canvas)
         self.plotConcHistoryGraph()
