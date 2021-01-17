@@ -6,6 +6,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QDate
 from PyQt5.QtCore import QStringListModel
 from PyQt5.QtCore import pyqtSlot, Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.patches as mpatches
+import numpy as np
 import ksyUtil
 
 
@@ -38,34 +41,22 @@ class Text():#텍스트를 창에 표시하기 위한 객체
     def defaultTextSet(self):
         self._u.dateEdit.setDate(datetime.date.today())
 
-        self._u.dateLabel.setText(self.dispWeekDayKr(datetime.date.today()))
+        self._u.dateLabel.setText(self.util.dispWeekDayKr(datetime.date.today()))
         self._u.dateEdit.setMinimumDate(QDate(2021, 1, 1))
         self._u.dateEdit.setMaximumDate(QDate(2100, 12, 31))
 
-        self._u.dateEdit_2.setDate(datetime.date.today())
-        self._u.dateEdit_2.setMinimumDate(QDate(2021, 1, 1))
-        self._u.dateEdit_2.setMaximumDate(QDate(2100, 12, 31))
-
+        self._u.endWeekday.setText(self.util.dispWeekDayKr(datetime.date.today()))
         self._u.dateEdit_3.setDate(datetime.date.today())
         self._u.dateEdit_3.setMinimumDate(QDate(2021, 1, 1))
         self._u.dateEdit_3.setMaximumDate(QDate(2100, 12, 31))
+
+        self._u.startWeekday.setText(self.util.dispWeekDayKr(datetime.date.today()))
+        self._u.dateEdit_2.setDate(datetime.date.today())
+        self._u.dateEdit_2.setMinimumDate(QDate(2021, 1, 1))
+        self._u.dateEdit_2.setMaximumDate(QDate(2100, 12, 31))
         return
 
-    def dispWeekDayKr(self, date):
-        if date.weekday() == 0:
-            return "월요일"
-        elif date.weekday() == 1:
-            return "화요일"
-        elif date.weekday() == 2:
-            return "수요일"
-        elif date.weekday() == 3:
-            return "목요일"
-        elif date.weekday() == 4:
-            return "금요일"
-        elif date.weekday() == 5:
-            return "토요일"
-        elif date.weekday() == 6:
-            return "일요일"
+
 
 
 
@@ -119,7 +110,7 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         #item = self.item_comboBox.currentText()
         date = self._u.dateEdit.date()
         date = util.covtQdateToPydate(date)
-        self._u.dateLabel.setText(self.dispWeekDayKr(date))
+        self._u.dateLabel.setText(self.util.dispWeekDayKr(date))
         rows = self._u.reqConcInfoByItem()
         if rows != None:
             self._u.concTableWidget.setColumnCount(4)
@@ -148,6 +139,89 @@ class Text():#텍스트를 창에 표시하기 위한 객체
 class graph():#그래프를 창에 표시하기 위한 객체
     def __init__(self, _upper):
         self._u = _upper
+        # utility객체를 초기화 한다.
+        self.util = ksyUtil.Util()
+
+        self.fig = plt.Figure()
+        self.canvas = FigureCanvas(self.fig)
+
+        # run버튼 클릭 이벤트 연결
+        self._u.btnTrandReq.clicked.connect(self.btnTrandReqClicked)
+
+        #날짜 위제에서 날짜를 변경하면 테이블을 갱신한다.
+        self._u.dateEdit_2.dateTimeChanged.connect(self.checkRangeOfStartDay)
+        self._u.dateEdit_3.dateTimeChanged.connect(self.checkRangeOfEndDay)
+
+        _upper.ConcHistoryGraph.addWidget(self.canvas)
+        self.plotConcHistoryGraph()
+        return
+
+    def checkRangeOfStartDay(self):#시작날짜는 endDay보다 클 수 없다.(endDay는 오늘보다 클수없는 조건이 붙기때문에 endDay하고만 비교하면 됨.)
+        today = datetime.date.today()
+        startDayStr = self._u.dateEdit_2.date()
+        endDayStr = self._u.dateEdit_3.date()
+        startDay = self.util.covtQdateToPydate(startDayStr)
+        endDay = self.util.covtQdateToPydate(endDayStr)
+        if startDay > endDay:
+            self._u.dateEdit_2.setDate(endDay)
+        self._u.startWeekday.setText(self.util.dispWeekDayQt(self._u.dateEdit_2.date()))
+        return
+    def checkRangeOfEndDay(self):#종료날짜는 오늘보다 클 수 없고 startDay보다 작을 수 없다.
+        today = datetime.date.today()
+        startDayStr = self._u.dateEdit_2.date()
+        endDayStr = self._u.dateEdit_3.date()
+        startDay = self.util.covtQdateToPydate(startDayStr)
+        endDay = self.util.covtQdateToPydate(endDayStr)
+        if endDay > today:
+            self._u.dateEdit_3.setDate(today)
+        if endDay < startDayStr:
+            self._u.dateEdit_3.setDate(startDayStr)
+        self._u.endWeekday.setText(self.util.dispWeekDayQt(self._u.dateEdit_3.date()))
+        return
+
+    def plotConcHistoryGraph(self):
+        x = np.arange(0, 100, 1)
+        y = np.sin(x)
+
+        ax = self.fig.add_subplot(212)#그래프를 여러개 그릴때 영역을 분할하여 그릴 수 있음 (세로영역갯수, 가로영역 갯수, 현재 표시할 위치)
+        ax.plot(x, y, label="label")
+        ax.set_xlabel("x_axis")
+        ax.set_ylabel("y_axis")
+
+        ax.set_title("my graph")
+        ax.legend()#그래프의 명각을 표시하는 메서드
+        self.canvas.draw()
+        return
+
+    def btnTrandReqClicked(self):
+        qtStartDateStr = self._u.dateEdit_2.date()
+        qtEndDateStr = self._u.dateEdit_3.date()
+        startDate = self.util.covtQdateToPydate(qtStartDateStr)
+        endDate = self.util.covtQdateToPydate(qtEndDateStr)
+        item = self._u.lineEditForRun_2.text()
+        baseAmount = self._u.lineEditForRun_3
+        if self._u.unitDay.isChecked() == True:
+            reqUnit = "day"
+        elif self._u.unitWeek.isChecked() == True:
+            reqUnit = "week"
+        elif self._u.unitMonth.isChecked() == True:
+            reqUnit = "month"
+        else:#radio버튼이 아무것도 선택되어있지 않은경우 일봉으로 설정.
+            reqUnit = "day"
+        self._u.TrandReqModel(startDate, endDate, item, baseAmount, reqUnit)
+        return
+    def plotConcGraph(self, dispLists):
+        x = 0
+        y = 0
+        self.fig.clf(212)#새로 그리기 전에 figure클리어, 클리어에는 cla(axis클리어), clf(figure클리어), close(window클리어)가 있음.
+        ax = self.fig.add_subplot(212)
+        ax.plot(x, y, label="label")
+        ax.set_xlabel("date")
+        ax.set_ylabel("y_axis")
+
+        ax.set_title("my graph")
+        ax.legend()
+        self.canvas.draw()
         return
 class eventSet():#이벤트 관련 처리 객체
     def __init__(self, _upper):

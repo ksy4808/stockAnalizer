@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -323,18 +323,21 @@
         <height>20</height>
        </rect>
       </property>
+      <property name="text">
+       <string>앱클론</string>
+      </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="btnTrandReq">
       <property name="geometry">
        <rect>
-        <x>400</x>
+        <x>460</x>
         <y>40</y>
         <width>75</width>
         <height>91</height>
        </rect>
       </property>
       <property name="text">
-       <string>PushButton</string>
+       <string>추세조회</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_7">
@@ -354,7 +357,7 @@
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>120</y>
+        <y>130</y>
         <width>51</width>
         <height>16</height>
        </rect>
@@ -367,10 +370,13 @@
       <property name="geometry">
        <rect>
         <x>90</x>
-        <y>116</y>
+        <y>130</y>
         <width>271</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="text">
+       <string>100000000</string>
       </property>
      </widget>
      <widget class="QWidget" name="verticalLayoutWidget">
@@ -384,6 +390,103 @@
       </property>
       <layout class="QVBoxLayout" name="ConcHistoryGraph"/>
      </widget>
+     <widget class="QRadioButton" name="unitDay">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>60</y>
+        <width>90</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>일봉</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="unitWeek">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>80</y>
+        <width>90</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>주봉</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="unitMonth">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>100</y>
+        <width>90</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>월봉</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="geometry">
+       <rect>
+        <x>370</x>
+        <y>10</y>
+        <width>81</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>단위</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="startWeekday">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>105</y>
+        <width>56</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="endWeekday">
+      <property name="geometry">
+       <rect>
+        <x>234</x>
+        <y>104</y>
+        <width>56</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+     <zorder>groupBox</zorder>
+     <zorder>dateEdit_2</zorder>
+     <zorder>dateEdit_3</zorder>
+     <zorder>label_5</zorder>
+     <zorder>label_6</zorder>
+     <zorder>lineEditForRun_2</zorder>
+     <zorder>btnTrandReq</zorder>
+     <zorder>label_7</zorder>
+     <zorder>label_8</zorder>
+     <zorder>lineEditForRun_3</zorder>
+     <zorder>verticalLayoutWidget</zorder>
+     <zorder>unitDay</zorder>
+     <zorder>unitWeek</zorder>
+     <zorder>unitMonth</zorder>
+     <zorder>startWeekday</zorder>
+     <zorder>endWeekday</zorder>
     </widget>
    </widget>
    <widget class="QPushButton" name="pushButton">

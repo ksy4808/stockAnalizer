@@ -30,7 +30,6 @@ import threading
 import time
 import os.path
 
-from graphConclude import graphConclude
 import ksyUtil
 import ksyUi
 from model import getFromLocalDB as getLocalDB
@@ -73,7 +72,7 @@ class MyWindow(QMainWindow, form_class):
 
         self.lineEdit_second.setValidator(QtGui.QIntValidator(1,9999,self))#0초 부터 9999초까지 설정가능 범위로 한다.
 
-        graphCall = graphConclude(self)#생성할 class에 자신을 넘겨줌으로써 생성된 class에서 mainwindow를 바로 사용할수 있게 한다.
+        #graphCall = graphConclude(self)#생성할 class에 자신을 넘겨줌으로써 생성된 class에서 mainwindow를 바로 사용할수 있게 한다.
 
     def ConcludeBy_custom(self):
         return
@@ -243,6 +242,32 @@ class MyWindow(QMainWindow, form_class):
     def reqGetDateForFileName(self):
         util = self.util
         return util.getDateForFileName(self)
+
+    def TrandReqModel(self, startDate, endDate, item, baseAmount, reqUnit):
+
+        days = (endDate - startDate).days + 1  # 시작날짜와 종료날짜를 포함해야하므로 1을 더함.
+        #Item의 체결정보를 시작 날짜부터 끝 날짜까지 모두 가지고 온다.
+        SegAllDays = self.model.reqTotalConcInfo(item, startDate, endDate)
+        dispLists = self.setPeriodBaseConc(SegAllDays, startDate, endDate, baseAmount)
+        self.graph.plotConcGraph(dispLists)
+        return
+    def setPeriodBaseConc(self, SegAllDays, startDate, endDate, baseAmount):
+        retList = []
+        startTimeWindowStr = "090000"
+        endTimeWindowStr = "153000"
+        for rows in SegAllDays:#SegAllDays: 해당 아이템의 startDate~endDate까지 모든 체결정보
+            if startDate <= endDate:
+                retList.append(startDate)
+                totalRows = len(rows)
+                for i in range(totalRows):
+                    row = rows[totalRows - i - 1]#rows: 해당 아이템의 날짜별 해당 일자의 모든 체결정보, 정배열 시간으로 확인하기 위해 뒤에서부터 처리.
+                    for i in range(len(row)):#row: 해당 아이템의 단위 체결정보
+                        retList.append(row[i])
+
+            startDate = startDate + dt.timedelta(days=1)
+        return
+
+
 
 def runItemSort():
     app = QApplication(sys.argv)

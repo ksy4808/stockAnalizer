@@ -15,6 +15,11 @@ class Util():
         datestr = date.toString("yyyy_MM_dd")
         return datestr
 
+    def retDateForFileName(self, date):#datetime 타입의 변수를 받아서 파일명으로 사용할 수 있는 형태의 String으로 변환한다.
+        datestr = str(date)
+        datestr = datestr.replace("-", "_")
+        return datestr
+
     def getPureText(self, tuple):#DB에서 가지고 온 Item name은 괄호가 포함되기 때문에 이를 제거하기 위한함수.
         item = str(tuple)
         item = item.replace("('", "")
@@ -31,6 +36,40 @@ class Util():
         #날짜만 변경할 경우 toPyDate, 시간까지 변경할 경우 toPyDateTime 등으로 사용하여야 함.
         pyDate = QtDate.toPyDate()
         return pyDate
+
+    def dispWeekDayKr(self, date):
+        if date.weekday() == 0:
+            return "월요일"
+        elif date.weekday() == 1:
+            return "화요일"
+        elif date.weekday() == 2:
+            return "수요일"
+        elif date.weekday() == 3:
+            return "목요일"
+        elif date.weekday() == 4:
+            return "금요일"
+        elif date.weekday() == 5:
+            return "토요일"
+        elif date.weekday() == 6:
+            return "일요일"
+
+    def dispWeekDayQt(self, qtDate):
+        date = self.covtQdateToPydate(qtDate)
+        if date.weekday() == 0:
+            return "월요일"
+        elif date.weekday() == 1:
+            return "화요일"
+        elif date.weekday() == 2:
+            return "수요일"
+        elif date.weekday() == 3:
+            return "목요일"
+        elif date.weekday() == 4:
+            return "금요일"
+        elif date.weekday() == 5:
+            return "토요일"
+        elif date.weekday() == 6:
+            return "일요일"
+
 
     def doNothing(self):
         return
