@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1205</width>
+    <width>1492</width>
     <height>710</height>
    </rect>
   </property>
@@ -19,12 +19,12 @@
      <rect>
       <x>20</x>
       <y>50</y>
-      <width>1161</width>
+      <width>1441</width>
       <height>601</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -106,7 +106,7 @@
        <rect>
         <x>30</x>
         <y>130</y>
-        <width>531</width>
+        <width>691</width>
         <height>431</height>
        </rect>
       </property>
@@ -117,8 +117,8 @@
      <widget class="QPushButton" name="reArrange">
       <property name="geometry">
        <rect>
-        <x>1020</x>
-        <y>125</y>
+        <x>1250</x>
+        <y>85</y>
         <width>61</width>
         <height>23</height>
        </rect>
@@ -130,8 +130,8 @@
      <widget class="QLabel" name="label_2">
       <property name="geometry">
        <rect>
-        <x>780</x>
-        <y>130</y>
+        <x>1010</x>
+        <y>90</y>
         <width>121</width>
         <height>16</height>
        </rect>
@@ -143,8 +143,8 @@
      <widget class="QLineEdit" name="lineEdit_second">
       <property name="geometry">
        <rect>
-        <x>650</x>
-        <y>90</y>
+        <x>880</x>
+        <y>50</y>
         <width>101</width>
         <height>20</height>
        </rect>
@@ -159,8 +159,8 @@
      <widget class="QLabel" name="label">
       <property name="geometry">
        <rect>
-        <x>600</x>
-        <y>130</y>
+        <x>830</x>
+        <y>90</y>
         <width>71</width>
         <height>16</height>
        </rect>
@@ -172,8 +172,8 @@
      <widget class="QLineEdit" name="lineEdit_TransVolume">
       <property name="geometry">
        <rect>
-        <x>660</x>
-        <y>130</y>
+        <x>890</x>
+        <y>90</y>
         <width>111</width>
         <height>20</height>
        </rect>
@@ -185,8 +185,8 @@
      <widget class="QLabel" name="label_3">
       <property name="geometry">
        <rect>
-        <x>760</x>
-        <y>90</y>
+        <x>990</x>
+        <y>50</y>
         <width>161</width>
         <height>16</height>
        </rect>
@@ -198,10 +198,10 @@
      <widget class="QTableWidget" name="concTableWidget_2">
       <property name="geometry">
        <rect>
-        <x>610</x>
-        <y>160</y>
-        <width>521</width>
-        <height>401</height>
+        <x>740</x>
+        <y>130</y>
+        <width>651</width>
+        <height>431</height>
        </rect>
       </property>
       <attribute name="verticalHeaderDefaultSectionSize">
@@ -211,8 +211,8 @@
      <widget class="QPushButton" name="concluionDetail">
       <property name="geometry">
        <rect>
-        <x>1090</x>
-        <y>124</y>
+        <x>1320</x>
+        <y>84</y>
         <width>51</width>
         <height>23</height>
        </rect>
@@ -224,8 +224,8 @@
      <widget class="QLabel" name="label_4">
       <property name="geometry">
        <rect>
-        <x>610</x>
-        <y>90</y>
+        <x>840</x>
+        <y>50</y>
         <width>31</width>
         <height>16</height>
        </rect>
@@ -237,8 +237,8 @@
      <widget class="QLineEdit" name="lineEdit_TransVolume_sum">
       <property name="geometry">
        <rect>
-        <x>890</x>
-        <y>130</y>
+        <x>1120</x>
+        <y>90</y>
         <width>111</width>
         <height>20</height>
        </rect>
@@ -508,8 +508,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1205</width>
-     <height>21</height>
+     <width>1492</width>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

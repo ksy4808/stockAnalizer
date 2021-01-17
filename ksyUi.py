@@ -146,7 +146,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
         self.canvas = FigureCanvas(self.fig)
 
         # run버튼 클릭 이벤트 연결
-        self._u.btnTrandReq.clicked.connect(self.btnTrandReqClicked)
+        self._u.btnTrandReq.clicked.connect(self.btnTrendReqClicked)
 
         #날짜 위제에서 날짜를 변경하면 테이블을 갱신한다.
         self._u.dateEdit_2.dateTimeChanged.connect(self.checkRangeOfStartDay)
@@ -193,7 +193,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
         self.canvas.draw()
         return
 
-    def btnTrandReqClicked(self):
+    def btnTrendReqClicked(self):
         qtStartDateStr = self._u.dateEdit_2.date()
         qtEndDateStr = self._u.dateEdit_3.date()
         startDate = self.util.covtQdateToPydate(qtStartDateStr)
@@ -208,7 +208,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
             reqUnit = "month"
         else:#radio버튼이 아무것도 선택되어있지 않은경우 일봉으로 설정.
             reqUnit = "day"
-        self._u.TrandReqModel(startDate, endDate, item, baseAmount, reqUnit)
+        self._u.TrendReqModel(startDate, endDate, item, baseAmount, reqUnit)
         return
     def plotConcGraph(self, dispLists):
         x = 0

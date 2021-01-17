@@ -243,7 +243,7 @@ class MyWindow(QMainWindow, form_class):
         util = self.util
         return util.getDateForFileName(self)
 
-    def TrandReqModel(self, startDate, endDate, item, baseAmount, reqUnit):
+    def TrendReqModel(self, startDate, endDate, item, baseAmount, reqUnit):
 
         days = (endDate - startDate).days + 1  # 시작날짜와 종료날짜를 포함해야하므로 1을 더함.
         #Item의 체결정보를 시작 날짜부터 끝 날짜까지 모두 가지고 온다.
@@ -255,17 +255,55 @@ class MyWindow(QMainWindow, form_class):
         retList = []
         startTimeWindowStr = "090000"
         endTimeWindowStr = "153000"
+        dateFormatter = "%Y-%m-%d%H%M%S"
+        startTime = dt.datetime.strptime(str(startDate) + startTimeWindowStr, dateFormatter)
+        endTime = dt.datetime.strptime(str(startDate) + endTimeWindowStr, dateFormatter)
+        accTimeWindow = 5#default 1초로 설정한다. 나중엔 window를 변경하는하도록 할때 해당 변수를 수정한다
         for rows in SegAllDays:#SegAllDays: 해당 아이템의 startDate~endDate까지 모든 체결정보
+            accForOneDay = []
+            startTime = dt.datetime.strptime(str(startDate) + startTimeWindowStr, dateFormatter)
+            endTime = dt.datetime.strptime(str(startDate) + endTimeWindowStr, dateFormatter)
+            if rows == []:#주말등의 이유로 해당 날짜 데이터가 없는경우 그냥 넘긴다.
+                continue
             if startDate <= endDate:
-                retList.append(startDate)
+                #retList.append(startDate)
                 totalRows = len(rows)
+                firstConclude = True  # 9시 이후 제일 첫 거래는 단일가거래기 때문에 매수인지 매도인지 알 수 없으므로 무시하기 위한 flag
+                frontWindow = dt.datetime.combine(startDate, dt.time(hour=9, minute=0, second=0))
+                tailWindow = frontWindow + dt.timedelta(seconds=accTimeWindow)
+                timeStamp = frontWindow
+                accConclude = 0  # timewindow내의 체결 금액을 sum 하기 위한 변수
+                accConcludeQty = 0  # timewindow내의 체결량을 sum 하기 위한 변수
                 for i in range(totalRows):
                     row = rows[totalRows - i - 1]#rows: 해당 아이템의 날짜별 해당 일자의 모든 체결정보, 정배열 시간으로 확인하기 위해 뒤에서부터 처리.
-                    for i in range(len(row)):#row: 해당 아이템의 단위 체결정보
-                        retList.append(row[i])
-
+                    dateFormatter = "%Y-%m-%d%H%M%S"
+                    curTime = dt.datetime.strptime(str(startDate) + row[1], dateFormatter)
+                    if curTime < startTime or curTime > endTime:#9시 이전의 데이터와 3시 30분 이후 데이터는 무시한다.
+                        continue
+                    if firstConclude == True and curTime > frontWindow:
+                        firstConclude = False  # 9시 이후 제일 첫 거래는 단일가거래기 때문에 매수인지 매도인지 알 수 없으므로 무시하기 위한 flag clear
+                        continue
+                    if curTime >= frontWindow and curTime < tailWindow:
+                        accConclude += int(row[4])
+                        accConcludeQty += int(row[3])
+                    if curTime >= tailWindow:#현재 시간이 timewindow를 벗어나므로 window를 shift해야함.
+                        while curTime >= tailWindow:#현재시간이 timeWindow내에 들어올 때 까지 window를 shift한다.
+                            frontWindow = tailWindow
+                            tailWindow = frontWindow + dt.timedelta(seconds=accTimeWindow)
+                            accRow = []
+                            accRow.append(timeStamp)#1차원 배열
+                            accRow.append(accConcludeQty)
+                            accRow.append(accConclude)
+                            accForOneDay.append(accRow)  # 계산할 window내에 있는 모든 거래 내역을 하나의 리스트로 정리 2차원배열
+                            timeStamp = frontWindow
+                            accConcludeQty = 0
+                            accConclude = 0
+                        #timestamp를 이용하여 현재까지 누적된 체결 량을 append한다.
+                        accConclude = int(row[4])#체결정보 sum 값을 append한 다음엔 현재 체결 정보를 누적하기 시작한다.
+                        accConcludeQty = int(row[3])
             startDate = startDate + dt.timedelta(days=1)
-        return
+            retList.append(accForOneDay)
+        return retList
 
 
 
