@@ -71,7 +71,10 @@ class Text():#텍스트를 창에 표시하기 위한 객체
                 self._u.item_comboBox.addItem(item)
         else:#해당날짜 데이터가 없는경우(주말이거나 데이터가없거나 등등, table을 비운다.)
             self._u.item_comboBox.clear()
-
+        tables = self._u.model.getAllItemListFromItems()
+        self._setDropCompleterForitem_comboBox_2(tables)
+        for index in tables:
+            self._u.item_comboBox_2.addItem(index)
         return
 
     def getComboboxCurText(self, comboBox):
@@ -95,6 +98,25 @@ class Text():#텍스트를 창에 표시하기 위한 객체
 
         lb = QLabel()#자동완성기능을 사용하기 위한 객체 생성 아마도 자동완성기능은 QLabel객체의 기능을 활용하나 봄
         self._u.item_comboBox.currentTextChanged.connect(lb.setText)#자동완성기능을 호출
+
+    def _setDropCompleterForitem_comboBox_2(self, tables):
+        #tables = self.getAllItemList()
+        forDropList = []
+        util = self.util
+        for index in range(len(tables)):
+            item = tables[index]
+            forDropList.append(item)
+            #self.item_comboBox.addItem(item)
+
+        forDropModel = QStringListModel()##관심종목으로 추가하기 위한 line editer의 completer model
+        forDropModel.setStringList(forDropList)
+        forDropCompleter = QCompleter()  ##관심종목으로 추가하기 위한 line editer의 completer
+        forDropCompleter.setModel(forDropModel)
+
+        self._u.item_comboBox_2.setCompleter(forDropCompleter)
+
+        lb = QLabel()#자동완성기능을 사용하기 위한 객체 생성 아마도 자동완성기능은 QLabel객체의 기능을 활용하나 봄
+        self._u.item_comboBox_2.currentTextChanged.connect(lb.setText)#자동완성기능을 호출
 
     def dispConcludeTableByDate(self):#날짜가 변경된 이벤트에 대한 체결정보 refresh동작, 해당 날짜의 DB에 따라 종목명 콤보박스도 업데이트 해야함
         self.dispConcludeTable()
@@ -153,7 +175,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
         self._u.dateEdit_3.dateTimeChanged.connect(self.checkRangeOfEndDay)
 
         _upper.ConcHistoryGraph.addWidget(self.canvas)
-        self.plotConcHistoryGraph()
+        #self.plotConcHistoryGraph()
         return
 
     def checkRangeOfStartDay(self):#시작날짜는 endDay보다 클 수 없다.(endDay는 오늘보다 클수없는 조건이 붙기때문에 endDay하고만 비교하면 됨.)
@@ -198,8 +220,9 @@ class graph():#그래프를 창에 표시하기 위한 객체
         qtEndDateStr = self._u.dateEdit_3.date()
         startDate = self.util.covtQdateToPydate(qtStartDateStr)
         endDate = self.util.covtQdateToPydate(qtEndDateStr)
-        item = self._u.lineEditForRun_2.text()
-        baseAmount = self._u.lineEditForRun_3
+        item = self._u.item_comboBox_2.currentText()
+        baseAmount = self._u.lineEditForRun_3.text()
+        timeWindow = int(self._u.lineEditForRun_4.text())
         if self._u.unitDay.isChecked() == True:
             reqUnit = "day"
         elif self._u.unitWeek.isChecked() == True:
@@ -208,21 +231,39 @@ class graph():#그래프를 창에 표시하기 위한 객체
             reqUnit = "month"
         else:#radio버튼이 아무것도 선택되어있지 않은경우 일봉으로 설정.
             reqUnit = "day"
-        self._u.TrendReqModel(startDate, endDate, item, baseAmount, reqUnit)
+        self._u.TrendReqModel(startDate, endDate, item, baseAmount, reqUnit, timeWindow)#reqWindow 를 일단 5로 설정
         return
     def plotConcGraph(self, dispLists):
-        x = 0
-        y = 0
-        self.fig.clf(212)#새로 그리기 전에 figure클리어, 클리어에는 cla(axis클리어), clf(figure클리어), close(window클리어)가 있음.
-        ax = self.fig.add_subplot(212)
-        ax.plot(x, y, label="label")
-        ax.set_xlabel("date")
-        ax.set_ylabel("y_axis")
 
-        ax.set_title("my graph")
+        x = []
+        y = []
+        accL = []
+        acc = 0
+        i = 0
+        for row in dispLists:
+            acc += row[2]
+
+            x.append(row[0])
+            y.append(row[2])
+            accL.append(acc)
+        self.fig.clf(212)#새로 그리기 전에 figure클리어, 클리어에는 cla(axis클리어), clf(figure클리어), close(window클리어)가 있음.
+        self.plotView(212, x, y, "scala")
+        self.plotView(211, x, accL, "accumulated")
+
+        return
+    def plotView(self, clfVal, xVal, yVal, label):
+
+        ax = self.fig.add_subplot(clfVal)
+        ax.plot(xVal, yVal, label=label)
+        ax.grid(b=None, which='major', axis='both')
+        ax.set_xlabel("date")
+        ax.set_ylabel("big conclude")
+
+        #ax.set_title("Trand")
         ax.legend()
         self.canvas.draw()
         return
+
 class eventSet():#이벤트 관련 처리 객체
     def __init__(self, _upper):
         self._u = _upper

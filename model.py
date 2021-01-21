@@ -23,6 +23,27 @@ class getFromLocalDB():#로컬 DB에서 파일을 가지고 오는 객체
             return rows
         return None
 
+    def getAllItemListFromItems(self):
+        util = self.util
+
+
+        con = sqlite3.connect("Items.db")
+        cur = con.cursor()
+        cur.execute("SELECT * from KosdaqItems;")
+        rows = cur.fetchall()
+        itemList = []
+        for row in rows:
+            itemList.append(util.getItemNameFromItemDBList(row))
+        cur.execute("SELECT * from KospiItems;")
+        rows = cur.fetchall()
+        for row in rows:
+            itemList.append(util.getItemNameFromItemDBList(row))
+
+        con.close()
+
+        return itemList
+
+
     def getConcInfoByItem(self, dateStr, itemStr):
         if self.staticisFileExist(dateStr):
             if self.staticisItemExsit(dateStr, itemStr) == True:

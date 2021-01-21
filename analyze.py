@@ -243,27 +243,88 @@ class MyWindow(QMainWindow, form_class):
         util = self.util
         return util.getDateForFileName(self)
 
-    def TrendReqModel(self, startDate, endDate, item, baseAmount, reqUnit):
+    def TrendReqModel(self, startDate, endDate, item, baseAmount, reqUnit, reqWindow):
 
         days = (endDate - startDate).days + 1  # 시작날짜와 종료날짜를 포함해야하므로 1을 더함.
         #Item의 체결정보를 시작 날짜부터 끝 날짜까지 모두 가지고 온다.
         SegAllDays = self.model.reqTotalConcInfo(item, startDate, endDate)
-        dispLists = self.setPeriodBaseConc(SegAllDays, startDate, endDate, baseAmount)
-        self.graph.plotConcGraph(dispLists)
+        #dispLists: 기간동안 거래내역이 있는 날짜의 거래내역에서 time window별로 거래내역을 모아서 정리한 리스트
+        dispLists = self.setPeriodBaseConc(SegAllDays, startDate, endDate, baseAmount, reqUnit, reqWindow)
+        sortedDispList = self.sortDispList(dispLists, baseAmount)#기준금액에 미달하는 리스트는 제거한다.
+        if reqUnit == "day":
+            sumedTotalConcludeResurt = self.sumTotalConcludePerADay(sortedDispList)#기준금액이상의 체결정보를 날짜별로 sum
+        elif reqUnit == "week":
+            sumedTotalConcludeResurt = self.sumTotalConcludePerAWeek(sortedDispList)#기준금액이상의 체결정보를 날짜별로 sum
+        elif reqUnit == "month":
+            sumedTotalConcludeResurt = self.sumTotalConcludePerAMonth(sortedDispList)#기준금액이상의 체결정보를 날짜별로 sum
+        self.graph.plotConcGraph(sumedTotalConcludeResurt)
         return
-    def setPeriodBaseConc(self, SegAllDays, startDate, endDate, baseAmount):
+
+    def sumTotalConcludePerADay(self, sortedDispList):
+        isFirstDate = True
+        retVal = []
+        for calcUnit in sortedDispList:
+            if(isFirstDate == True):#날짜별 체결정보 sum하는 동작에서 제일 첫 날짜
+                isFirstDate = False
+                curDate = dt.datetime.date(calcUnit[0])
+                concAccList = []
+                concAccList.append(curDate)
+                concAcc = 0
+                numAcc = 0
+                concAcc += calcUnit[2]
+                numAcc += calcUnit[1]
+            elif curDate != dt.datetime.date(calcUnit[0]):#날짜가 바뀐경우 새로 sum을 하기 위해 리스트 초기화
+                concAccList.append(numAcc)
+                concAccList.append(concAcc)
+                retVal.append(concAccList)#sub한 list를 append한다.
+                curDate = dt.datetime.date(calcUnit[0])
+                concAccList = []#새로운 리스트로 저장하기 위해 list를 새로 초기화
+                concAccList.append(curDate)
+                concAcc = 0
+                numAcc = 0
+                concAcc += calcUnit[2]
+                numAcc += calcUnit[1]
+            else:#이전 리스트와 같은 날짜인 경우 체결정보 Sum
+                concAcc += calcUnit[2]
+                numAcc += calcUnit[1]
+                continue
+        concAccList.append(numAcc)
+        concAccList.append(concAcc)
+        #마지막 acc한 데이터 append해야함.
+        retVal.append(concAccList)
+        return retVal
+
+
+    def sumTotalConcludePerAWeek(self, sortedDispList):
+
+        return
+
+    def sumTotalConcludePerAMonth(self, sortedDispList):
+
+        return
+
+    def sortDispList(self, dispLists, baseAmount):
+        retList = []
+        for day in dispLists:
+            for concUnit in day:
+                if abs(int(concUnit[2])) > int(baseAmount):##기준금액 이상인 경우 append
+                    retList.append(concUnit)
+        return retList
+
+    def setPeriodBaseConc(self, SegAllDays, startDate, endDate, baseAmount, reqUnit, reqWindow):
         retList = []
         startTimeWindowStr = "090000"
         endTimeWindowStr = "153000"
         dateFormatter = "%Y-%m-%d%H%M%S"
         startTime = dt.datetime.strptime(str(startDate) + startTimeWindowStr, dateFormatter)
         endTime = dt.datetime.strptime(str(startDate) + endTimeWindowStr, dateFormatter)
-        accTimeWindow = 5#default 1초로 설정한다. 나중엔 window를 변경하는하도록 할때 해당 변수를 수정한다
+        accTimeWindow = reqWindow#default 1초로 설정한다. 나중엔 window를 변경하는하도록 할때 해당 변수를 수정한다
         for rows in SegAllDays:#SegAllDays: 해당 아이템의 startDate~endDate까지 모든 체결정보
             accForOneDay = []
             startTime = dt.datetime.strptime(str(startDate) + startTimeWindowStr, dateFormatter)
             endTime = dt.datetime.strptime(str(startDate) + endTimeWindowStr, dateFormatter)
             if rows == []:#주말등의 이유로 해당 날짜 데이터가 없는경우 그냥 넘긴다.
+                startDate = startDate + dt.timedelta(days=1)
                 continue
             if startDate <= endDate:
                 #retList.append(startDate)

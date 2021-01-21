@@ -69,6 +69,8 @@ class Util():
             return "토요일"
         elif date.weekday() == 6:
             return "일요일"
+    def getItemNameFromItemDBList(self, DBList):
+        return DBList[1].replace("'","")
 
 
     def doNothing(self):

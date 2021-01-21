@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -266,7 +266,7 @@
       <property name="geometry">
        <rect>
         <x>90</x>
-        <y>75</y>
+        <y>41</y>
         <width>126</width>
         <height>25</height>
        </rect>
@@ -279,7 +279,7 @@
       <property name="geometry">
        <rect>
         <x>233</x>
-        <y>75</y>
+        <y>41</y>
         <width>131</width>
         <height>25</height>
        </rect>
@@ -292,7 +292,7 @@
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>79</y>
+        <y>45</y>
         <width>31</width>
         <height>16</height>
        </rect>
@@ -305,26 +305,13 @@
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>40</y>
+        <y>20</y>
         <width>41</width>
         <height>16</height>
        </rect>
       </property>
       <property name="text">
        <string>종목명</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineEditForRun_2">
-      <property name="geometry">
-       <rect>
-        <x>93</x>
-        <y>40</y>
-        <width>271</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>앱클론</string>
       </property>
      </widget>
      <widget class="QPushButton" name="btnTrandReq">
@@ -344,7 +331,7 @@
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>80</y>
+        <y>46</y>
         <width>41</width>
         <height>16</height>
        </rect>
@@ -357,7 +344,7 @@
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>130</y>
+        <y>90</y>
         <width>51</width>
         <height>16</height>
        </rect>
@@ -370,13 +357,16 @@
       <property name="geometry">
        <rect>
         <x>90</x>
-        <y>130</y>
+        <y>90</y>
         <width>271</width>
         <height>20</height>
        </rect>
       </property>
       <property name="text">
        <string>100000000</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
      <widget class="QWidget" name="verticalLayoutWidget">
@@ -449,7 +439,7 @@
       <property name="geometry">
        <rect>
         <x>90</x>
-        <y>105</y>
+        <y>71</y>
         <width>56</width>
         <height>12</height>
        </rect>
@@ -462,7 +452,7 @@
       <property name="geometry">
        <rect>
         <x>234</x>
-        <y>104</y>
+        <y>70</y>
         <width>56</width>
         <height>12</height>
        </rect>
@@ -471,12 +461,56 @@
        <string>TextLabel</string>
       </property>
      </widget>
+     <widget class="QComboBox" name="item_comboBox_2">
+      <property name="geometry">
+       <rect>
+        <x>89</x>
+        <y>16</y>
+        <width>251</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="maxVisibleItems">
+       <number>20</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>120</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>단위</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEditForRun_4">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>120</y>
+        <width>271</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>1</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
      <zorder>groupBox</zorder>
      <zorder>dateEdit_2</zorder>
      <zorder>dateEdit_3</zorder>
      <zorder>label_5</zorder>
      <zorder>label_6</zorder>
-     <zorder>lineEditForRun_2</zorder>
      <zorder>btnTrandReq</zorder>
      <zorder>label_7</zorder>
      <zorder>label_8</zorder>
@@ -487,6 +521,9 @@
      <zorder>unitMonth</zorder>
      <zorder>startWeekday</zorder>
      <zorder>endWeekday</zorder>
+     <zorder>item_comboBox_2</zorder>
+     <zorder>label_9</zorder>
+     <zorder>lineEditForRun_4</zorder>
     </widget>
    </widget>
    <widget class="QPushButton" name="pushButton">
@@ -509,7 +546,7 @@
      <x>0</x>
      <y>0</y>
      <width>1492</width>
-     <height>31</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
