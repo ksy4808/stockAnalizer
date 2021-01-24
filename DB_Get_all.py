@@ -11,13 +11,34 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QAxContainer import *
 from time import sleep
+from threading import Lock
+
+
 
 
 
 form_class = uic.loadUiType("DBGetAll.ui")[0]  # ui 파일을 로드하여 form_class 생성
 
 #sem0 = threading.Semaphore(1)
+class AsyncTask:
+    def __init__(self, _upper):
+        self._u = _upper
+        pass
 
+    def TaskA(self):
+
+        if self._u.opt10055Called == True:
+            self._u.opt10055Called = False
+            self._u.opt10055Released = True
+            print("opt10055 func call")
+            self._u.opt10055_req(self._u.opt10055Code, self._u.opt10055Date, self._u.opt10055Repeat)
+            print("opt10055 func Done")
+
+
+        threading.Timer(3.6,self.TaskA).start()
+    def TaskB(self):
+        #print("TaskBCalled")
+        threading.Timer(4, self.TaskB).start()
 
 class superLoopFlag():
     global hasSomeThingTodo
@@ -42,21 +63,29 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
     global superLoopFlag
     global nextConclutionCnt
     nextConclutionCnt = 0
-    global delay_gap_cnd
-    delay_gap_cnd = 0
-
 
     def __init__(self):  # MyWindow 클래스의 초기화 함수(생성자)
         super().__init__()  # 부모클래스 QMainWindow 클래스의 초기화 함수(생성자)를 호출
         self.setupUi(self)  # ui 파일 화면 출력
+
+        #아래 3개 변수는 opt10055 를 call할때 3.6초 delay를 구현하기 위함.
+        self.opt10055Released = False
+        self.opt10055Pending = False
+        self.opt10055Called = False
+        self.opt10055Code = 0
+        self.opt10055Date = 0
+        self.opt10055Repeat = 0
+
+        self.at = AsyncTask(self)
+        self.at.TaskA()
+        self.at.TaskB()
+
 
         self.kiwoom = QAxWidget(
             "KHOPENAPI.KHOpenAPICtrl.1")  # 키움증권 Open API+의 ProgID를 사용하여 생성된 QAxWidget을 kiwoom 변수에 할당
         self.AllbuttonDisable()
 
         self.btnLogin.clicked.connect(self.btn_login)  # ui 파일을 생성할때 작성한 로그인 버튼의 objectName 으로 클릭 이벤트가 발생할 경우 btn_login 함수를 호출
-        self.btnSearch2.clicked.connect(
-            self.btn_search2)  # ui 파일을 생성할때 작성한 조회 버튼의 objectName 으로 클릭 이벤트가 발생할 경우 btn_search 함수를 호출
         self.btnSearch.clicked.connect(self.btn_search)  # ui 파일을 생성할때 작성한 조회 버튼의 objectName 으로 클릭 이벤트가 발생할 경우 btn_search 함수를 호출
         self.btnGetAllItems.clicked.connect(self.btn_GetAllItems) # 모든 종목 get함수 호출
 
@@ -132,32 +161,6 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         self.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "opt10001_req", "opt10001", 0, "0101")  # 키움 dynamicCall 함수를 통해 CommRqData 함수를 호출하여 opt10001 API를 구분명 opt10001_req, 화면번호 0101으로 호출함
         self.AllbuttonDisable()
 
-    def btn_search2(self):  # 조회 버튼 클릭 시 실행되는 함수
-        global g_code
-        global getContinue
-        date = "1"# 1인경우 당일, 2이면 전일
-
-        code = self.lineEditCode.text()  # ui 파일을 생성할때 작성한 종목코드 입력란의 objectName 으로 사용자가 입력한 종목코드의 텍스트를 가져옴
-        if code == "":
-            con = sqlite3.connect("Items.db")
-            cur = con.cursor()
-            cur.execute("select * from KosdaqItems;")
-            #for row in cur:
-            #    sem0.acquire()
-            row = cur.fetchone()
-            con.close()
-            code = row[0]
-            getContinue = 1
-        g_code = code
-        self.pteLog.appendPlainText("종목코드: " + code)  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
-        self.opt10055_req(code, date, 0)
-        """
-        self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
-        self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "당일전일", date)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
-        self.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "opt10055_req", "opt10055", 0, "0101")  # 키움 dynamicCall 함수를 통해 CommRqData 함수를 호출하여 opt10055 API를 구분명 opt10055_req, 화면번호 0101으로 호출함
-        """
-        self.AllbuttonDisable()
-
     def btn_Search_kospi(self):  # 조회 버튼 클릭 시 실행되는 함수
         global g_code
         global getContinue
@@ -198,6 +201,12 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
                     getContinue = 0
                     return
 
+    def setOpt10055Req(self, code, date, repeat):
+        self.opt10055Code = code
+        self.opt10055Date = date
+        self.opt10055Repeat = repeat
+        self.opt10055Called = True
+        print("opt10055 Requested")
 
     def receive_trdata(self, screen_no, rqname, trcode, recordname, prev_next, data_len, err_code, msg1, msg2):  # 키움 데이터 수신 함수
         global g_code
@@ -208,6 +217,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         global nextConclutionCnt
         global g_date
         if rqname == "opt10001_req":  # 수신된 데이터 구분명이 opt10001_req 일 경우
+            print("opt10001 received")
             name = self.kiwoom.dynamicCall("CommGetData(QString, QString, QString, int, QString)", trcode, "", rqname, 0, "종목명")  # 구분명 opt10001_req 의 종목명을 가져와서 name에 셋팅
             volume = self.kiwoom.dynamicCall("CommGetData(QString, QString, QString, int, QString)", trcode, "", rqname, 0, "거래량")  # 구분명 opt10001_req 의 거래량을 가져와서 volume에 셋팅
 
@@ -216,8 +226,9 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
 
             self.AllbuttomEnable()
         if rqname == "opt10055_req":  # 수신된 데이터 구분명이 opt10055_req 일 경우
+            print("opt10055 received")
             maxRepeatCnt = self.kiwoom.dynamicCall("GetRepeatCnt(QString, QString)", trcode, rqname)
-            self.pteLog.appendPlainText("Repeat Cnt: {}".format(maxRepeatCnt))
+            #self.pteLog.appendPlainText("Repeat Cnt: {}".format(maxRepeatCnt))
             name = self.kiwoom.dynamicCall("GetMasterCodeName(QString)", str(g_code))  # 맨뒤는 종목코드, 코드에 따른 종목명을 가져옴
             name = self.nameRefair(name)
             name = str(name)
@@ -242,13 +253,17 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
 
             con.commit()
             con.close()
+
+            self.pteLog.appendPlainText("Last Conclude Time: {}".format(time))
             if(1000 == maxRepeatCnt):
                 #superLoopFlag.someThingTodo = 1
                 nextConclutionCnt += 1000
                 date = g_date  # 1인경우 당일, 2이면 전일
                 #code = self.lineEditCode.text()  # ui 파일을 생성할때 작성한 종목코드 입력란의 objectName 으로 사용자가 입력한 종목코드의 텍스트를 가져옴
                 code = g_code
-                self.opt10055_req(code, date, 2)
+                #self.opt10055_req(code, date, 2)
+                self.setOpt10055Req(code, date, 2)  # 타이머 인터럽트방식으로 변경
+
 
             else:
                 nextConclutionCnt = 0
@@ -362,30 +377,33 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
             print("현재 offset: {}/{}, 종목 명: {}".format(offset, maxLoop, name))
             self.pteLog.appendPlainText("현재 offset: {}/{}, 종목 명: {}".format(offset, maxLoop, name))  #
             self.pteLog.appendPlainText("종목코드: " + code)  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
-            self.opt10055_req(code, g_date, 0)
+            #self.opt10055_req(code, g_date, 0)
+            self.setOpt10055Req(code, g_date, 0)  # 타이머 인터럽트방식으로 변경
             self.AllbuttonDisable()
 
-            name = self.kiwoom.dynamicCall("GetMasterCodeName(QString)", str(g_code))
+            #name = self.kiwoom.dynamicCall("GetMasterCodeName(QString)", str(g_code))
             return True
         else:# table이 있으면 0을 return
             print("현재 offset: {}/{}, 종목 명: {}, exist!!".format(offset, maxLoop, name))
             self.pteLog.appendPlainText("현재 offset: {}/{}, 종목 명: {}, exist!!".format(offset, maxLoop, name))  #
             return False
     def opt10055_req(self, code, date, repeat):
-        global delay_gap_cnd
-        delay_gap_cnd += 1
-        if delay_gap_cnd > 50:
-            sleep(20)
-            delay_gap_cnd = 0
-        self.pteLog.appendPlainText(
-            "종목코드: " + code + "  " + str(delay_gap_cnd))  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
-        sleep(3.6)
-        self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드",
-                                code)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
-        self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "당일전일",
-                                date)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
-        self.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "opt10055_req", "opt10055", repeat,
-                                "0101")  # 키움 dynamicCall 함수를 통해 CommRqData 함수를 호출하여 opt10055 API를 구분명 opt10055_req, 화면번호 0101으로 호출함
+        if self.opt10055Released == True:
+            self.opt10055Released = False
+            self.setAllsignalBlock()
+            critical_section_lock = Lock()
+            with critical_section_lock:#이 critical설정은 다른 스레드를 block하는것만 되는것 같음.
+                self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드",
+                                        code)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
+                print("code set Done, code is {}".format(int(code)))
+                self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "당일전일",
+                                        date)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
+                print("date set Done, date is {}".format(int(date)))
+
+                self.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "opt10055_req", "opt10055", repeat,
+                                        "0101")  # 키움 dynamicCall 함수를 통해 CommRqData 함수를 호출하여 opt10055 API를 구분명 opt10055_req, 화면번호 0101으로 호출함
+                print("CommRqDate Done")
+            self.setAllsignalActive()
     def AllbuttonDisable(self):
         self.lineEditCode.setDisabled(True)  # 종목코드 입력란을 비활성화 상태로 변경
         self.btnSearch2.setDisabled(True)  # 당일 체결정보 조회 버튼을 비활성화 상태로 변경
@@ -407,10 +425,17 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         self.btnSearch_kospi.setDisabled(False)  # 코스피 당일체결내역 조회 버튼활성화
         self.todaySetting.setDisabled(False) # 날짜 지정 text line 활성화
 
+    def setAllsignalBlock(self):
+        self.blockSignals(True)
+
+
+    def setAllsignalActive(self):
+        self.blockSignals(False)
 
 # py 파일 실행시 제일 먼저 동작
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = MyWindow()  # MyWindow 클래스를 생성하여 myWondow 변수에 할당
     myWindow.show()  # MyWindow 클래스를 노출
+
     app.exec_()  # 메인 이벤트 루프에 진입 후 프로그램이 종료될 때까지 무한 루프 상태 대기

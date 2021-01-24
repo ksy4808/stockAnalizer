@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -270,6 +270,16 @@
         <width>126</width>
         <height>25</height>
        </rect>
+      </property>
+      <property name="dateTime">
+       <datetime>
+        <hour>0</hour>
+        <minute>0</minute>
+        <second>0</second>
+        <year>2021</year>
+        <month>1</month>
+        <day>11</day>
+       </datetime>
       </property>
       <property name="currentSection">
        <enum>QDateTimeEdit::DaySection</enum>
@@ -526,17 +536,30 @@
      <zorder>lineEditForRun_4</zorder>
     </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btnLogin">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>20</y>
+      <x>20</x>
+      <y>10</y>
       <width>75</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>로그인</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="isLogin">
+    <property name="geometry">
+     <rect>
+      <x>108</x>
+      <y>17</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>로그오프 상태</string>
     </property>
    </widget>
   </widget>

@@ -10,6 +10,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.patches as mpatches
 import numpy as np
 import ksyUtil
+import matplotlib.font_manager as fm
+import openAPI
+
+font_path = r'D:\utils\NanumFontSetup_TTF_ALL\NanumBarunGothic.ttf'
+fontprop = fm.FontProperties(fname=font_path, size=10)
 
 
 class Text():#텍스트를 창에 표시하기 위한 객체
@@ -17,6 +22,7 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         self._u = _upper
         #utility객체를 초기화 한다.
         self.util = ksyUtil.Util()
+        self.openApi = openAPI.openAPI(_upper)
         return
     def displayInit(self):
         # 초기에 표시할 텍스트를 셋팅한다. 특히 날짜 등은 해당 날짜에 따라 변동이 되므로 가변적이어서 프로그램 실행시 셋팅하도록한다.
@@ -35,7 +41,11 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         #run버튼 클릭 이벤트 연결
         self._u.run_btn.clicked.connect(self.runBtn)
 
+        self._u.btnLogin.clicked.connect(self.loginBtn)
 
+    def loginBtn(self):
+        self.openApi.login_btn()
+        return
 
 
     def defaultTextSet(self):
@@ -51,7 +61,7 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         self._u.dateEdit_3.setMaximumDate(QDate(2100, 12, 31))
 
         self._u.startWeekday.setText(self.util.dispWeekDayKr(datetime.date.today()))
-        self._u.dateEdit_2.setDate(datetime.date.today())
+        #self._u.dateEdit_2.setDate(datetime.date.today())# 시작날짜는 오늘에서부터 뒤로 어느정도는 밀어놓고 시작한다.
         self._u.dateEdit_2.setMinimumDate(QDate(2021, 1, 1))
         self._u.dateEdit_2.setMaximumDate(QDate(2100, 12, 31))
         return
@@ -71,10 +81,17 @@ class Text():#텍스트를 창에 표시하기 위한 객체
                 self._u.item_comboBox.addItem(item)
         else:#해당날짜 데이터가 없는경우(주말이거나 데이터가없거나 등등, table을 비운다.)
             self._u.item_comboBox.clear()
-        tables = self._u.model.getAllItemListFromItems()
+        #tables = self._u.model.getAllItemListFromItems()
+        tables = None
+        date = datetime.date.today()
+        while tables == None:
+            tables = self._u.model.getAllItemList(util.retDateForFileName(date))
+            date += datetime.timedelta(days = -1)
+
         self._setDropCompleterForitem_comboBox_2(tables)
-        for index in tables:
-            self._u.item_comboBox_2.addItem(index)
+        for index in range(len(tables)):
+            item = util.getPureText(tables[index])
+            self._u.item_comboBox_2.addItem(item)
         return
 
     def getComboboxCurText(self, comboBox):
@@ -84,6 +101,7 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         #tables = self.getAllItemList()
         forDropList = []
         util = self.util
+
         for index in range(len(tables)):
             item = util.getPureText(tables[index])
             forDropList.append(item)
@@ -104,7 +122,8 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         forDropList = []
         util = self.util
         for index in range(len(tables)):
-            item = tables[index]
+            #item = tables[index]
+            item = util.getPureText(tables[index])
             forDropList.append(item)
             #self.item_comboBox.addItem(item)
 
@@ -243,26 +262,42 @@ class graph():#그래프를 창에 표시하기 위한 객체
         for row in dispLists:
             acc += row[2]
 
-            x.append(row[0])
-            y.append(row[2])
-            accL.append(acc)
+            x.append(str(row[0]))
+            y.append((row[2]/1000000))#단위 백만원
+            accL.append((acc/1000000))#단위 백만원
         self.fig.clf(212)#새로 그리기 전에 figure클리어, 클리어에는 cla(axis클리어), clf(figure클리어), close(window클리어)가 있음.
-        self.plotView(212, x, y, "scala")
-        self.plotView(211, x, accL, "accumulated")
+
+        ax = self.fig.add_subplot(212)
+        self.plotView(ax, 212, x, y, "simple(millions)", "BAR")
+        self.plotView(ax, 212, x, accL, "accumulate(millions)", "LINE")
 
         return
-    def plotView(self, clfVal, xVal, yVal, label):
+    def plotView(self,ax, clfVal, xVal, yVal, label, type):
+        if type == "LINE":
+            ax.plot(xVal, yVal, label=label, color='g')
+            ax.grid(b=None, which='major', axis='both')
+            ax.set_xlabel("date", fontproperties=fontprop)
+            ax.set_ylabel("기준가 이상 거래내역", fontproperties=fontprop)
 
-        ax = self.fig.add_subplot(clfVal)
-        ax.plot(xVal, yVal, label=label)
-        ax.grid(b=None, which='major', axis='both')
-        ax.set_xlabel("date")
-        ax.set_ylabel("big conclude")
+            #ax.set_title("Trand")
+            ax.legend()
+            self.canvas.draw()
+            return
+        else:
+            i = 0
+            for val in yVal:
+                if val < 0:
+                    ax.bar(xVal[i], val, color="blue", width=0.2)
+                else:
+                    ax.bar(xVal[i], val, color="red", width=0.2)
+                i += 1
+            #ax.grid(b=None, which='major', axis='both')
+            ax.set_xlabel("date")
+            ax.set_ylabel("big conclude")
 
-        #ax.set_title("Trand")
-        ax.legend()
-        self.canvas.draw()
-        return
+            # ax.set_title("Trand")
+            self.canvas.draw()
+            return
 
 class eventSet():#이벤트 관련 처리 객체
     def __init__(self, _upper):
