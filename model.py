@@ -75,7 +75,26 @@ class getFromLocalDB():#로컬 DB에서 파일을 가지고 오는 객체
                 return False
             return True
         return False
-
+    def reqCodeByItem(self, Name):
+        con = sqlite3.connect("Items.db")
+        cur = con.cursor()
+        cur.execute("SELECT * from KosdaqItems;")
+        rows = cur.fetchall()
+        con.close()
+        for row in rows:
+            if Name == self.util.nameRefair(row[1]):
+                strCode = row[0]
+                return strCode
+        con = sqlite3.connect("Items.db")
+        cur = con.cursor()
+        cur.execute("SELECT * from KospiItems;")
+        rows = cur.fetchall()
+        con.close()
+        for row in rows:
+            if Name == self.util.nameRefair(row[1]):
+                strCode = row[0]
+                return strCode
+        return None
     def reqTotalConcInfo(self, itemStr, startDate, endDate):
         retSegAllDays = []
         days = (endDate - startDate).days + 1#시작날짜와 종료날짜를 포함해야하므로 1을 더함.

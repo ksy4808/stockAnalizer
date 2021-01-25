@@ -75,3 +75,30 @@ class Util():
 
     def doNothing(self):
         return
+
+    def nameRefair(self, name):
+        name = name.replace('&', 'n')
+        name = name.replace('-', '_')
+        name = name.replace(' ', '_')
+        name = name.replace('.', '_')
+        name = name.replace('0', '_0')
+        name = name.replace('1', '_1')
+        name = name.replace('2', '_2')
+        name = name.replace('3', '_3')
+        name = name.replace('4', '_4')
+        name = name.replace('5', '_5')
+        name = name.replace('6', '_6')
+        name = name.replace('7', '_7')
+        name = name.replace('8', '_8')
+        name = name.replace('9', '_9')
+        name = name.replace('(', '_')
+        name = name.replace(')', '_')
+        name = name.replace('%', '_')
+        name = name.replace('*', '_')
+        name = name.replace('@', '_')
+        name = name.replace('!', '_')
+        name = name.replace('+', '_')
+        name = name.replace('=', '_')
+        name = name.replace('~', '_')
+        name = name.replace('/', '_')
+        return name

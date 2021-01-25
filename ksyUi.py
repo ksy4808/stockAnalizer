@@ -11,7 +11,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import ksyUtil
 import matplotlib.font_manager as fm
-import openAPI
+
 
 font_path = r'D:\utils\NanumFontSetup_TTF_ALL\NanumBarunGothic.ttf'
 fontprop = fm.FontProperties(fname=font_path, size=10)
@@ -22,7 +22,7 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         self._u = _upper
         #utility객체를 초기화 한다.
         self.util = ksyUtil.Util()
-        self.openApi = openAPI.openAPI(_upper)
+
         return
     def displayInit(self):
         # 초기에 표시할 텍스트를 셋팅한다. 특히 날짜 등은 해당 날짜에 따라 변동이 되므로 가변적이어서 프로그램 실행시 셋팅하도록한다.
@@ -41,10 +41,12 @@ class Text():#텍스트를 창에 표시하기 위한 객체
         #run버튼 클릭 이벤트 연결
         self._u.run_btn.clicked.connect(self.runBtn)
 
+        #로그인 버튼 클릭이벤트 연결
         self._u.btnLogin.clicked.connect(self.loginBtn)
 
     def loginBtn(self):
-        self.openApi.login_btn()
+        self._u.reqLogin()
+
         return
 
 
@@ -195,6 +197,16 @@ class graph():#그래프를 창에 표시하기 위한 객체
 
         _upper.ConcHistoryGraph.addWidget(self.canvas)
         #self.plotConcHistoryGraph()
+        return
+
+    def plotTrHistory(self, trHistory):
+        x = []
+        y = []
+        for row in trHistory:
+            x.append(str(row[0]))
+            y.append(row[1])  # 단위 백만원
+        ax = self.fig.add_subplot(211)
+        self.plotView(ax, 211, x, y, "value", "LINE")
         return
 
     def checkRangeOfStartDay(self):#시작날짜는 endDay보다 클 수 없다.(endDay는 오늘보다 클수없는 조건이 붙기때문에 endDay하고만 비교하면 됨.)

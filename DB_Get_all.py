@@ -10,6 +10,7 @@ from random import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QAxContainer import *
+from PyQt5.QtCore import *
 from time import sleep
 from threading import Lock
 
@@ -64,10 +65,10 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
     global nextConclutionCnt
     nextConclutionCnt = 0
 
-    def __init__(self):  # MyWindow 클래스의 초기화 함수(생성자)
+    def __init__(self, app):  # MyWindow 클래스의 초기화 함수(생성자)
         super().__init__()  # 부모클래스 QMainWindow 클래스의 초기화 함수(생성자)를 호출
         self.setupUi(self)  # ui 파일 화면 출력
-
+        self.app = app
         #아래 3개 변수는 opt10055 를 call할때 3.6초 delay를 구현하기 위함.
         self.opt10055Released = False
         self.opt10055Pending = False
@@ -95,7 +96,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         self.kiwoom.OnEventConnect.connect(self.event_connect)  # 키움 서버 접속 관련 이벤트가 발생할 경우 event_connect 함수 호출
         self.kiwoom.OnReceiveTrData.connect(self.receive_trdata)  # 키움 데이터 수신 관련 이벤트가 발생할 경우 receive_trdata 함수 호출
 
-        #self.superLoop()
+
     def superLoop(self):
         global superLoopFlag
         while True:
@@ -140,6 +141,8 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
 
     def btn_login(self):  # Login 버튼 클릭 시 실행되는 함수
         ret = self.kiwoom.dynamicCall("CommConnect()")  # 키움 로그인 윈도우를 실행
+        self.login_event_loop = QEventLoop()
+        self.login_event_loop.exec_()
 
     def event_connect(self, err_code):  # 키움 서버 접속 관련 이벤트가 발생할 경우 실행되는 함수
         if err_code == 0:  # err_code가 0이면 로그인 성공 그외 실패
@@ -153,7 +156,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
             self.AllbuttonDisable()
             self.pteLog.appendPlainText("로그인 실패")  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
             self.btnLogin.setDisabled(False)  # 로그인 버튼을 활성화 상태로 변경
-
+        self.login_event_loop.exit()
     def btn_search(self):  # 조회 버튼 클릭 시 실행되는 함수
         code = self.lineEditCode.text()  # ui 파일을 생성할때 작성한 종목코드 입력란의 objectName 으로 사용자가 입력한 종목코드의 텍스트를 가져옴
         self.pteLog.appendPlainText("종목코드: " + code)  # ui 파일을 생성할때 작성한 plainTextEdit의 objectName 으로 해당 plainTextEdit에 텍스트를 추가함
@@ -216,6 +219,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         global superLoopFlag
         global nextConclutionCnt
         global g_date
+        self.tr_event_loop.exit()
         if rqname == "opt10001_req":  # 수신된 데이터 구분명이 opt10001_req 일 경우
             print("opt10001 received")
             name = self.kiwoom.dynamicCall("CommGetData(QString, QString, QString, int, QString)", trcode, "", rqname, 0, "종목명")  # 구분명 opt10001_req 의 종목명을 가져와서 name에 셋팅
@@ -270,6 +274,7 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
                 if getContinue == 1:
                     rowOffset = rowOffset+1
                     self.ReadNextItemConclusion(rowOffset)
+
     def getToday(self):
         todayStr = self.todaySetting.text()
         if todayStr == "":
@@ -391,7 +396,13 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
         if self.opt10055Released == True:
             self.opt10055Released = False
             self.setAllsignalBlock()
+            self.tr_event_loop = QEventLoop()
             critical_section_lock = Lock()
+            #self.app.exit()
+            self.app.exec_()
+            #QEventLoop.ExcludeUserInputEvents()#사용자 입력 이벤트 무시
+            #self.tr_event_loop.exit()
+            #QEventLoop.processEvents(self.tr_event_loop.ExcludeUserInputEvents)
             with critical_section_lock:#이 critical설정은 다른 스레드를 block하는것만 되는것 같음.
                 self.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드",
                                         code)  # 키움 dynamicCall 함수를 통해 SetInputValue 함수를 호출하여 종목코드를 셋팅함
@@ -403,7 +414,10 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
                 self.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "opt10055_req", "opt10055", repeat,
                                         "0101")  # 키움 dynamicCall 함수를 통해 CommRqData 함수를 호출하여 opt10055 API를 구분명 opt10055_req, 화면번호 0101으로 호출함
                 print("CommRqDate Done")
+            #QEventLoop.processEvents()
+            #self.tr_event_loop.exec_()
             self.setAllsignalActive()
+
     def AllbuttonDisable(self):
         self.lineEditCode.setDisabled(True)  # 종목코드 입력란을 비활성화 상태로 변경
         self.btnSearch2.setDisabled(True)  # 당일 체결정보 조회 버튼을 비활성화 상태로 변경
@@ -432,10 +446,14 @@ class MyWindow(QMainWindow, form_class):  # MyWindow 클래스 QMainWindow, form
     def setAllsignalActive(self):
         self.blockSignals(False)
 
+    def comm_rq_data(self, rqname, trcode, next, screen_no):
+        self.dynamicCall("CommRqData(QString, QString, int, QString", rqname, trcode, next, screen_no)
+        self.tr_event_loop = QEventLoop()
+        self.tr_event_loop.exec_()
+
 # py 파일 실행시 제일 먼저 동작
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    myWindow = MyWindow()  # MyWindow 클래스를 생성하여 myWondow 변수에 할당
+    myWindow = MyWindow(app)  # MyWindow 클래스를 생성하여 myWondow 변수에 할당
     myWindow.show()  # MyWindow 클래스를 노출
-
     app.exec_()  # 메인 이벤트 루프에 진입 후 프로그램이 종료될 때까지 무한 루프 상태 대기

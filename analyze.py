@@ -33,7 +33,7 @@ import os.path
 import ksyUtil
 import ksyUi
 from model import getFromLocalDB as getLocalDB
-
+import openAPI
 
 form_class = uic.loadUiType('analyze.ui')[0]
 
@@ -59,6 +59,9 @@ class MyWindow(QMainWindow, form_class):
         #메인 windows display초기화
         self.Text.displayInit()
 
+        #openAPI를 사용하기 위한 객체 초기화
+        self.openApi = openAPI.openAPI(self)
+
         #스위치 이벤트를 mathod에 연결한다.
         self.concludeByItematDate.clicked.connect(self.ConcludeBy_ItematDate)
         self.reArrange.clicked.connect(self.re_arrange)
@@ -73,6 +76,10 @@ class MyWindow(QMainWindow, form_class):
         self.lineEdit_second.setValidator(QtGui.QIntValidator(1,9999,self))#0초 부터 9999초까지 설정가능 범위로 한다.
 
         #graphCall = graphConclude(self)#생성할 class에 자신을 넘겨줌으로써 생성된 class에서 mainwindow를 바로 사용할수 있게 한다.
+
+    def reqLogin(self):
+        self.openApi.login_btn()
+        return
 
     def ConcludeBy_custom(self):
         return
@@ -258,6 +265,21 @@ class MyWindow(QMainWindow, form_class):
         elif reqUnit == "month":
             sumedTotalConcludeResurt = self.sumTotalConcludePerAMonth(sortedDispList)#기준금액이상의 체결정보를 날짜별로 sum
         self.graph.plotConcGraph(sumedTotalConcludeResurt)
+        if self.openApi.isLogon() == True:#로그인 된 경우에만 아래 루틴 실행.
+            """
+            code = self.model.reqCodeByItem(item)
+            self.openApi.reqOpt10015(item, code, startDate, endDate)
+            while self.openApi.opt10015Proc == True:
+                continue
+            self.graph.plotTrHistory(self.openApi.opt10015TrData)
+            """
+            code = self.model.reqCodeByItem(item)
+            revisePrice = 1#0이면 단순 당시 가격, 1이면 수정주가
+            self.openApi.reqOpt10081(code, endDate, revisePrice)
+            while self.openApi.opt10081Proc ==True:
+                continue
+            self.graph.plotTrHistory(self.openApi.opt10081TrData)
+
         return
 
     def sumTotalConcludePerADay(self, sortedDispList):
