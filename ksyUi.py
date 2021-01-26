@@ -185,7 +185,8 @@ class graph():#그래프를 창에 표시하기 위한 객체
         # utility객체를 초기화 한다.
         self.util = ksyUtil.Util()
 
-        self.fig = plt.Figure()
+        self.plt = plt
+        self.fig = self.plt.Figure()
         self.canvas = FigureCanvas(self.fig)
 
         # run버튼 클릭 이벤트 연결
@@ -247,6 +248,8 @@ class graph():#그래프를 창에 표시하기 위한 객체
         return
 
     def btnTrendReqClicked(self):
+        self._u.btnTrandReq.text = "조회중"
+        self._u.show()
         qtStartDateStr = self._u.dateEdit_2.date()
         qtEndDateStr = self._u.dateEdit_3.date()
         startDate = self.util.covtQdateToPydate(qtStartDateStr)
@@ -263,6 +266,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
         else:#radio버튼이 아무것도 선택되어있지 않은경우 일봉으로 설정.
             reqUnit = "day"
         self._u.TrendReqModel(startDate, endDate, item, baseAmount, reqUnit, timeWindow)#reqWindow 를 일단 5로 설정
+        self._u.btnTrandReq.text = "추세조회"
         return
     def plotConcGraph(self, dispLists):
 
@@ -282,18 +286,21 @@ class graph():#그래프를 창에 표시하기 위한 객체
         ax = self.fig.add_subplot(212)
         self.plotView(ax, 212, x, y, "simple(millions)", "BAR")
         self.plotView(ax, 212, x, accL, "accumulate(millions)", "LINE")
-
+        ax.set_xticklabels(x, rotation = 60)
+        #ax.set_xlabel(rotation=90)
+        self.canvas.draw()#여러그래프를 그릴땐 plot을 여러번하고 마지막에 draw는 한번만 해주면 됨.
         return
     def plotView(self,ax, clfVal, xVal, yVal, label, type):
         if type == "LINE":
             ax.plot(xVal, yVal, label=label, color='g')
             ax.grid(b=None, which='major', axis='both')
+
             ax.set_xlabel("date", fontproperties=fontprop)
             ax.set_ylabel("기준가 이상 거래내역", fontproperties=fontprop)
 
             #ax.set_title("Trand")
             ax.legend()
-            self.canvas.draw()
+            #self.canvas.draw()
             return
         else:
             i = 0
@@ -308,7 +315,7 @@ class graph():#그래프를 창에 표시하기 위한 객체
             ax.set_ylabel("big conclude")
 
             # ax.set_title("Trand")
-            self.canvas.draw()
+            #self.canvas.draw()
             return
 
 class eventSet():#이벤트 관련 처리 객체
